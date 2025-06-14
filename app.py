@@ -35,17 +35,24 @@ def upload_file():
         else:
             df = pd.read_excel(uploaded_file, engine='openpyxl')
 
+        # Menampilkan nama kolom untuk memeriksa apakah kolom yang diinginkan ada
+        st.write("Nama kolom yang ditemukan dalam file:", df.columns)
+
+        # Normalisasi kolom untuk menangani perbedaan kapitalisasi
+        df.columns = df.columns.str.strip()  # Menghapus spasi yang tidak diinginkan
+        df.columns = df.columns.str.title()  # Menjadikan nama kolom memiliki kapitalisasi yang benar
+
         # Periksa bahasa dan sesuaikan kolom
-        if 'Jumlah total' in df.columns:
+        if 'Jumlah Total' in df.columns:
             # File CSV Bahasa Indonesia
-            total_amount_column = 'Jumlah total'
-            customer_name_column = 'Nama pelanggan'
-        elif 'Total amount' in df.columns:
+            total_amount_column = 'Jumlah Total'
+            customer_name_column = 'Nama Pelanggan'
+        elif 'Total Amount' in df.columns:
             # File CSV Bahasa Inggris
-            total_amount_column = 'Total amount'
-            customer_name_column = 'Customer name'
+            total_amount_column = 'Total Amount'
+            customer_name_column = 'Customer Name'
         else:
-            st.error("Kolom total amount atau jumlah total dan nama pelanggan atau customer name tidak ditemukan.")
+            st.error("Kolom 'Total Amount' atau 'Jumlah Total' dan 'Nama Pelanggan' atau 'Customer Name' tidak ditemukan.")
             return None
 
         # Pemrosesan data
