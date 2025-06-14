@@ -35,28 +35,24 @@ def upload_file():
         else:
             df = pd.read_excel(uploaded_file, engine='openpyxl')
 
-        # Periksa apakah kolom 'Total amount' ada, jika tidak, cari 'jumlah total'
-        if 'Total amount' in df.columns:
+        # Periksa bahasa dan sesuaikan kolom
+        if 'Jumlah total' in df.columns:
+            # File CSV Bahasa Indonesia
+            total_amount_column = 'Jumlah total'
+            customer_name_column = 'Nama pelanggan'
+        elif 'Total amount' in df.columns:
+            # File CSV Bahasa Inggris
             total_amount_column = 'Total amount'
-        elif 'jumlah total' in df.columns:
-            total_amount_column = 'jumlah total'
-        else:
-            st.error("Kolom 'Total amount' atau 'jumlah total' tidak ditemukan.")
-            return None
-
-        # Periksa apakah kolom 'Customer name' ada, jika tidak, cari 'nama pelanggan'
-        if 'Customer name' in df.columns:
             customer_name_column = 'Customer name'
-        elif 'nama pelanggan' in df.columns:
-            customer_name_column = 'nama pelanggan'
         else:
-            st.error("Kolom 'Customer name' atau 'nama pelanggan' tidak ditemukan.")
+            st.error("Kolom total amount atau jumlah total dan nama pelanggan atau customer name tidak ditemukan.")
             return None
 
         # Pemrosesan data
         df[total_amount_column] = df[total_amount_column].replace({'Rp ': '', ',': ''}, regex=True)
-        df[total_amount_column] = pd.to_numeric(df[total_amount_column])
+        df[total_amount_column] = pd.to_numeric(df[total_amount_column], errors='coerce')  # Mengubah menjadi angka
 
+        # Mengelompokkan berdasarkan nama pelanggan
         df['Kelompok'] = df[customer_name_column].apply(kelompokan)
         df_grouped = df.groupby(['Kelompok', customer_name_column])[total_amount_column].sum().reset_index()
         df_grouped = df_grouped.rename(columns={'Kelompok': 'Nama Sales'})
