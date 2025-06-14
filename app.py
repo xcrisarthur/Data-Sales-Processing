@@ -28,19 +28,37 @@ def kelompokan(customer_name):
 
 # Membaca file CSV atau Excel yang diunggah
 def upload_file():
-    uploaded_file = st.file_uploader("Upload CSV or Excel file", type=["csv"])
+    uploaded_file = st.file_uploader("Upload CSV or Excel file", type=["csv", "xlsx"])
     if uploaded_file is not None:
         if uploaded_file.name.endswith('csv'):
             df = pd.read_csv(uploaded_file)
         else:
             df = pd.read_excel(uploaded_file, engine='openpyxl')
 
-        # Pemrosesan data seperti pada kode yang diberikan
-        df['Total amount'] = df['Total amount'].replace({'Rp ': '', ',': ''}, regex=True)
-        df['Total amount'] = pd.to_numeric(df['Total amount'])
+        # Periksa apakah kolom 'Total amount' ada, jika tidak, cari 'jumlah total'
+        if 'Total amount' in df.columns:
+            total_amount_column = 'Total amount'
+        elif 'jumlah total' in df.columns:
+            total_amount_column = 'jumlah total'
+        else:
+            st.error("Kolom 'Total amount' atau 'jumlah total' tidak ditemukan.")
+            return None
 
-        df['Kelompok'] = df['Customer name'].apply(kelompokan)
-        df_grouped = df.groupby(['Kelompok', 'Customer name'])['Total amount'].sum().reset_index()
+        # Periksa apakah kolom 'Customer name' ada, jika tidak, cari 'nama pelanggan'
+        if 'Customer name' in df.columns:
+            customer_name_column = 'Customer name'
+        elif 'nama pelanggan' in df.columns:
+            customer_name_column = 'nama pelanggan'
+        else:
+            st.error("Kolom 'Customer name' atau 'nama pelanggan' tidak ditemukan.")
+            return None
+
+        # Pemrosesan data
+        df[total_amount_column] = df[total_amount_column].replace({'Rp ': '', ',': ''}, regex=True)
+        df[total_amount_column] = pd.to_numeric(df[total_amount_column])
+
+        df['Kelompok'] = df[customer_name_column].apply(kelompokan)
+        df_grouped = df.groupby(['Kelompok', customer_name_column])[total_amount_column].sum().reset_index()
         df_grouped = df_grouped.rename(columns={'Kelompok': 'Nama Sales'})
 
         return df_grouped
